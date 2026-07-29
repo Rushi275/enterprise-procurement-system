@@ -9,25 +9,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import EnterpriseProcurementSystem.entity.User;
-import EnterpriseProcurementSystem.service.UserService;
+import EnterpriseProcurementSystem.entity.Product;
+import EnterpriseProcurementSystem.service.ProductService;
 
 @RestController
-@RequestMapping("/users")
-public class UserController {
+@RequestMapping("/products")
+public class ProductController {
 
     @Autowired
-    private UserService userService;
+    private ProductService productService;
 
-    
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.saveUser(user);
+    public Product createProduct(@RequestBody Product product) {
+        return productService.saveProduct(product);
     }
 
-   
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public List<Product> getAllProducts() {
+        return productService.getAllProducts();
     }
 }

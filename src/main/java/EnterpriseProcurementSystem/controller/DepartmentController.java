@@ -19,13 +19,13 @@ public class DepartmentController {
     @Autowired
     private DepartmentService departmentService;
 
-    // Create Department
+
     @PostMapping
     public Department createDepartment(@RequestBody Department department) {
         return departmentService.saveDepartment(department);
     }
 
-    // Get All Departments
+   
     @GetMapping
     public List<Department> getAllDepartments() {
         return departmentService.getAllDepartments();
