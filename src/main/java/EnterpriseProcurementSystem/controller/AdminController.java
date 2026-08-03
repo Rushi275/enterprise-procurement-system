@@ -24,10 +24,10 @@ public class AdminController {
     @PostMapping("/login")
     public String login(@RequestBody Admin admin) {
 
-        Admin existingAdmin = adminService.login(admin.getUsername(), admin.getPassword());
+        String token = adminService.login(admin.getUsername(), admin.getPassword());
 
-        if (existingAdmin != null) {
-            return "Login Successful";
+        if (token != null) {
+            return token;
         }
 
         return "Invalid Username or Password";
