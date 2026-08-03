@@ -21,4 +21,21 @@ public class ApprovalHierarchyService {
     public List<ApprovalHierarchy> getAllApprovalHierarchies() {
         return approvalHierarchyRepository.findAll();
     }
+
+    public ApprovalHierarchy updateApprovalHierarchy(Long id, ApprovalHierarchy approvalHierarchy) {
+        ApprovalHierarchy existingApprovalHierarchy = approvalHierarchyRepository.findById(id).orElse(null);
+
+        if (existingApprovalHierarchy != null) {
+            existingApprovalHierarchy.setDepartment(approvalHierarchy.getDepartment());
+            existingApprovalHierarchy.setLevel(approvalHierarchy.getLevel());
+
+            return approvalHierarchyRepository.save(existingApprovalHierarchy);
+        }
+
+        return null;
+    }
+
+    public void deleteApprovalHierarchy(Long id) {
+        approvalHierarchyRepository.deleteById(id);
+    }
 }

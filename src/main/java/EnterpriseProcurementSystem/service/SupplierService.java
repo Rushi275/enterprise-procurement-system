@@ -21,4 +21,28 @@ public class SupplierService {
     public List<Supplier> getAllSuppliers() {
         return supplierRepository.findAll();
     }
+
+    public Supplier updateSupplier(Long id, Supplier supplier) {
+        Supplier existingSupplier = supplierRepository.findById(id).orElse(null);
+
+        if (existingSupplier != null) {
+            existingSupplier.setProduct(supplier.getProduct());
+            existingSupplier.setName(supplier.getName());
+            existingSupplier.setPhone(supplier.getPhone());
+            existingSupplier.setAddress(supplier.getAddress());
+            existingSupplier.setEmail(supplier.getEmail());
+            existingSupplier.setGstNumber(supplier.getGstNumber());
+            existingSupplier.setStatus(supplier.getStatus());
+            existingSupplier.setRating(supplier.getRating());
+            existingSupplier.setFeedback(supplier.getFeedback());
+
+            return supplierRepository.save(existingSupplier);
+        }
+
+        return null;
+    }
+
+    public void deleteSupplier(Long id) {
+        supplierRepository.deleteById(id);
+    }
 }
