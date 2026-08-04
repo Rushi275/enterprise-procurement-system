@@ -30,15 +30,11 @@ public class RequestService {
         }
 
         request.setProduct(product);
-
         request.setStatus(RequestStatus.PENDING);
-
         request.setCreatedDate(LocalDateTime.now());
-
         request.setUpdatedDate(LocalDateTime.now());
 
         double totalPrice = product.getPricePerProduct() * request.getNumberOfQuantities();
-
         request.setTotalPrice(totalPrice);
 
         return requestRepository.save(request);
@@ -50,6 +46,36 @@ public class RequestService {
 
     public Request getRequestById(Long id) {
         return requestRepository.findById(id).orElse(null);
+    }
+
+    public List<Request> getPendingRequests() {
+        return requestRepository.findByStatus(RequestStatus.PENDING);
+    }
+
+    public Request approveRequest(Long id) {
+
+        Request request = requestRepository.findById(id).orElse(null);
+
+        if (request != null && request.getStatus() == RequestStatus.PENDING) {
+            request.setStatus(RequestStatus.APPROVED);
+            request.setUpdatedDate(LocalDateTime.now());
+            return requestRepository.save(request);
+        }
+
+        return null;
+    }
+
+    public Request rejectRequest(Long id) {
+
+        Request request = requestRepository.findById(id).orElse(null);
+
+        if (request != null && request.getStatus() == RequestStatus.PENDING) {
+            request.setStatus(RequestStatus.REJECTED);
+            request.setUpdatedDate(LocalDateTime.now());
+            return requestRepository.save(request);
+        }
+
+        return null;
     }
 
     public void deleteRequest(Long id) {
