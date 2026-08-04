@@ -6,8 +6,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import EnterpriseProcurementSystem.entity.Product;
 import EnterpriseProcurementSystem.entity.Request;
 import EnterpriseProcurementSystem.enums.RequestStatus;
+import EnterpriseProcurementSystem.repository.ProductRepository;
 import EnterpriseProcurementSystem.repository.RequestRepository;
 
 @Service
@@ -16,7 +18,18 @@ public class RequestService {
     @Autowired
     private RequestRepository requestRepository;
 
+    @Autowired
+    private ProductRepository productRepository;
+
     public Request raiseRequest(Request request) {
+
+        Product product = productRepository.findById(request.getProduct().getProductId()).orElse(null);
+
+        if (product == null) {
+            return null;
+        }
+
+        request.setProduct(product);
 
         request.setStatus(RequestStatus.PENDING);
 
@@ -24,8 +37,7 @@ public class RequestService {
 
         request.setUpdatedDate(LocalDateTime.now());
 
-        double totalPrice = request.getProduct().getPricePerProduct()
-                * request.getNumberOfQuantities();
+        double totalPrice = product.getPricePerProduct() * request.getNumberOfQuantities();
 
         request.setTotalPrice(totalPrice);
 
