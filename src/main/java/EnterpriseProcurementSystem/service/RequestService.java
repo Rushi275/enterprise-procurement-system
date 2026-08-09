@@ -52,11 +52,37 @@ public class RequestService {
         return requestRepository.findByStatus(RequestStatus.PENDING);
     }
 
-    public Request approveRequest(Long id) {
+    public Request managerApproveRequest(Long id) {
 
         Request request = requestRepository.findById(id).orElse(null);
 
         if (request != null && request.getStatus() == RequestStatus.PENDING) {
+            request.setStatus(RequestStatus.MANAGER_APPROVED);
+            request.setUpdatedDate(LocalDateTime.now());
+            return requestRepository.save(request);
+        }
+
+        return null;
+    }
+
+    public Request managerRejectRequest(Long id) {
+
+        Request request = requestRepository.findById(id).orElse(null);
+
+        if (request != null && request.getStatus() == RequestStatus.PENDING) {
+            request.setStatus(RequestStatus.MANAGER_REJECTED);
+            request.setUpdatedDate(LocalDateTime.now());
+            return requestRepository.save(request);
+        }
+
+        return null;
+    }
+
+    public Request approveRequest(Long id) {
+
+        Request request = requestRepository.findById(id).orElse(null);
+
+        if (request != null && request.getStatus() == RequestStatus.MANAGER_APPROVED) {
             request.setStatus(RequestStatus.APPROVED);
             request.setUpdatedDate(LocalDateTime.now());
             return requestRepository.save(request);
@@ -69,7 +95,7 @@ public class RequestService {
 
         Request request = requestRepository.findById(id).orElse(null);
 
-        if (request != null && request.getStatus() == RequestStatus.PENDING) {
+        if (request != null && request.getStatus() == RequestStatus.MANAGER_APPROVED) {
             request.setStatus(RequestStatus.REJECTED);
             request.setUpdatedDate(LocalDateTime.now());
             return requestRepository.save(request);

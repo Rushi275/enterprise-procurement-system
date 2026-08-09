@@ -54,6 +54,10 @@ public class UserService {
             existingUser.setDesignation(user.getDesignation());
             existingUser.setDepartment(user.getDepartment());
 
+            if (user.getRole() != null) {
+                existingUser.setRole(user.getRole());
+            }
+
             return userRepository.save(existingUser);
         }
 
@@ -69,7 +73,12 @@ public class UserService {
         User user = userRepository.findByEmail(email);
 
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return jwtUtil.generateToken(email);
+
+            String role = user.getRole() != null
+                    ? user.getRole().name()
+                    : "EMPLOYEE";
+
+            return jwtUtil.generateToken(email, role);
         }
 
         return null;

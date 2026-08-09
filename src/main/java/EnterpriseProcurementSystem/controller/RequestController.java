@@ -42,6 +42,16 @@ public class RequestController {
         return requestService.getPendingRequests();
     }
 
+    @PutMapping("/{id}/manager-approve")
+    public Request managerApproveRequest(@PathVariable Long id) {
+        return requestService.managerApproveRequest(id);
+    }
+
+    @PutMapping("/{id}/manager-reject")
+    public Request managerRejectRequest(@PathVariable Long id) {
+        return requestService.managerRejectRequest(id);
+    }
+
     @PutMapping("/{id}/approve")
     public Request approveRequest(@PathVariable Long id) {
         return requestService.approveRequest(id);

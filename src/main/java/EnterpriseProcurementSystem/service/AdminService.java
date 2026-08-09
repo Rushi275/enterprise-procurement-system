@@ -32,7 +32,7 @@ public class AdminService {
         Admin admin = adminRepository.findByUsername(username);
 
         if (admin != null && passwordEncoder.matches(password, admin.getPassword())) {
-            return jwtUtil.generateToken(username);
+            return jwtUtil.generateToken(username, "ADMIN");
         }
 
         return null;

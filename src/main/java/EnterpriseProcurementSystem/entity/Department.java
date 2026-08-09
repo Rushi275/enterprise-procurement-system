@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -20,14 +22,19 @@ public class Department {
     private String departmentName;
 
     @Column(name = "manager")
-    private String manager;
+    private String managerName;
+
+    @ManyToOne
+    @JoinColumn(name = "manager_id")
+    private User manager;
 
     public Department() {
     }
 
-    public Department(Long departmentId, String departmentName, String manager) {
+    public Department(Long departmentId, String departmentName, String managerName, User manager) {
         this.departmentId = departmentId;
         this.departmentName = departmentName;
+        this.managerName = managerName;
         this.manager = manager;
     }
 
@@ -47,11 +54,19 @@ public class Department {
         this.departmentName = departmentName;
     }
 
-    public String getManager() {
+    public String getManagerName() {
+        return managerName;
+    }
+
+    public void setManagerName(String managerName) {
+        this.managerName = managerName;
+    }
+
+    public User getManager() {
         return manager;
     }
 
-    public void setManager(String manager) {
+    public void setManager(User manager) {
         this.manager = manager;
     }
 }

@@ -24,13 +24,29 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
                                 "/admin/register",
                                 "/admin/login",
                                 "/users/login"
                         ).permitAll()
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+                        .requestMatchers(
+                                "/requests/*/manager-approve",
+                                "/requests/*/manager-reject"
+                        ).hasAuthority("ROLE_MANAGER")
+
+                        .requestMatchers(
+                                "/requests/*/approve",
+                                "/requests/*/reject"
+                        ).hasAuthority("ROLE_ADMIN")
+
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
