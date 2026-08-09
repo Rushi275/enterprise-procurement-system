@@ -27,6 +27,21 @@ public class UserController {
         return userService.saveUser(user);
     }
 
+    @PostMapping("/login")
+    public String login(@RequestBody User user) {
+
+        String token = userService.login(
+                user.getEmail(),
+                user.getPassword()
+        );
+
+        if (token != null) {
+            return token;
+        }
+
+        return "Invalid Email or Password";
+    }
+
     @GetMapping
     public List<User> getAllUsers() {
         return userService.getAllUsers();
