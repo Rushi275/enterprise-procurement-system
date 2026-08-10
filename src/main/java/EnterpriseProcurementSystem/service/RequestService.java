@@ -11,6 +11,7 @@ import EnterpriseProcurementSystem.entity.Department;
 import EnterpriseProcurementSystem.entity.Product;
 import EnterpriseProcurementSystem.entity.Request;
 import EnterpriseProcurementSystem.entity.Supplier;
+import EnterpriseProcurementSystem.entity.User;
 import EnterpriseProcurementSystem.enums.NotificationType;
 import EnterpriseProcurementSystem.enums.RequestStatus;
 import EnterpriseProcurementSystem.repository.AdminRepository;
@@ -18,6 +19,7 @@ import EnterpriseProcurementSystem.repository.DepartmentRepository;
 import EnterpriseProcurementSystem.repository.ProductRepository;
 import EnterpriseProcurementSystem.repository.RequestRepository;
 import EnterpriseProcurementSystem.repository.SupplierRepository;
+import EnterpriseProcurementSystem.repository.UserRepository;
 
 @Service
 public class RequestService {
@@ -43,6 +45,9 @@ public class RequestService {
     @Autowired
     private SupplierRepository supplierRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public Request raiseRequest(Request request) {
 
         Product product = productRepository
@@ -61,6 +66,15 @@ public class RequestService {
             return null;
         }
 
+        User user = userRepository
+                .findById(request.getUser().getUserId())
+                .orElse(null);
+
+        if (user == null) {
+            return null;
+        }
+
+        request.setUser(user);
         request.setProduct(product);
         request.setDepartment(department);
         request.setStatus(RequestStatus.PENDING);
@@ -76,10 +90,20 @@ public class RequestService {
 
         if (department.getManager() != null) {
 
-            String message = "New procurement request requires your approval.";
+            String message =
+                    "New procurement request requires your approval.\n\n"
+                    + "Request Details:\n"
+                    + "Request ID: " + savedRequest.getRequestId() + "\n"
+                    + "Employee: " + user.getName() + "\n"
+                    + "Product: " + product.getName() + "\n"
+                    + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                    + "Department: " + department.getDepartmentName() + "\n"
+                    + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                    + "Status: " + savedRequest.getStatus() + "\n\n"
+                    + "Please review and approve or reject the request.";
 
             notificationService.createNotification(
-                    message,
+                    "New procurement request requires your approval.",
                     department.getManager(),
                     savedRequest,
                     NotificationType.MANAGER_APPROVAL_REQUIRED
@@ -88,7 +112,7 @@ public class RequestService {
             emailService.sendEmail(
                     department.getManager().getEmail(),
                     "Procurement Request Approval Required",
-                    message + "\n\nRequest ID: " + savedRequest.getRequestId()
+                    message
             );
         }
 
@@ -125,11 +149,22 @@ public class RequestService {
 
                 Admin admin = admins.get(0);
 
+                String message =
+                        "Manager has approved a procurement request.\n\n"
+                        + "Request Details:\n"
+                        + "Request ID: " + savedRequest.getRequestId() + "\n"
+                        + "Employee: " + savedRequest.getUser().getName() + "\n"
+                        + "Product: " + savedRequest.getProduct().getName() + "\n"
+                        + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                        + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
+                        + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                        + "Status: " + savedRequest.getStatus() + "\n\n"
+                        + "Please review and approve or reject the request.";
+
                 emailService.sendEmail(
                         admin.getEmail(),
                         "Procurement Request Approved by Manager",
-                        "Manager has approved procurement request.\n\n"
-                                + "Request ID: " + savedRequest.getRequestId()
+                        message
                 );
             }
 
@@ -154,11 +189,20 @@ public class RequestService {
             if (savedRequest.getUser() != null &&
                     savedRequest.getUser().getEmail() != null) {
 
+                String message =
+                        "Your procurement request has been rejected by the Manager.\n\n"
+                        + "Request Details:\n"
+                        + "Request ID: " + savedRequest.getRequestId() + "\n"
+                        + "Product: " + savedRequest.getProduct().getName() + "\n"
+                        + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                        + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
+                        + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                        + "Status: " + savedRequest.getStatus();
+
                 emailService.sendEmail(
                         savedRequest.getUser().getEmail(),
                         "Procurement Request Rejected",
-                        "Your procurement request has been rejected by the Manager.\n\n"
-                                + "Request ID: " + savedRequest.getRequestId()
+                        message
                 );
             }
 
@@ -183,12 +227,21 @@ public class RequestService {
             if (savedRequest.getUser() != null &&
                     savedRequest.getUser().getEmail() != null) {
 
+                String message =
+                        "Your procurement request has been approved.\n\n"
+                        + "Request Details:\n"
+                        + "Request ID: " + savedRequest.getRequestId() + "\n"
+                        + "Product: " + savedRequest.getProduct().getName() + "\n"
+                        + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                        + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
+                        + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                        + "Status: " + savedRequest.getStatus() + "\n\n"
+                        + "Your procurement request has been successfully approved.";
+
                 emailService.sendEmail(
                         savedRequest.getUser().getEmail(),
                         "Procurement Request Approved",
-                        "Your procurement request has been approved.\n\n"
-                                + "Request ID: " + savedRequest.getRequestId()
-                                + "\nTotal Price: " + savedRequest.getTotalPrice()
+                        message
                 );
             }
 
@@ -199,14 +252,21 @@ public class RequestService {
 
                 if (supplier.getEmail() != null) {
 
+                    String message =
+                            "A new procurement order has been approved.\n\n"
+                            + "Order Details:\n"
+                            + "Request ID: " + savedRequest.getRequestId() + "\n"
+                            + "Product: " + savedRequest.getProduct().getName() + "\n"
+                            + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                            + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
+                            + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                            + "Status: " + savedRequest.getStatus() + "\n\n"
+                            + "Please process this procurement order.";
+
                     emailService.sendEmail(
                             supplier.getEmail(),
                             "New Procurement Order",
-                            "A procurement request has been approved.\n\n"
-                                    + "Request ID: " + savedRequest.getRequestId()
-                                    + "\nProduct: " + savedRequest.getProduct().getName()
-                                    + "\nQuantity: " + savedRequest.getNumberOfQuantities()
-                                    + "\nTotal Price: " + savedRequest.getTotalPrice()
+                            message
                     );
                 }
             }
@@ -232,11 +292,20 @@ public class RequestService {
             if (savedRequest.getUser() != null &&
                     savedRequest.getUser().getEmail() != null) {
 
+                String message =
+                        "Your procurement request has been rejected by the Admin.\n\n"
+                        + "Request Details:\n"
+                        + "Request ID: " + savedRequest.getRequestId() + "\n"
+                        + "Product: " + savedRequest.getProduct().getName() + "\n"
+                        + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                        + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
+                        + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                        + "Status: " + savedRequest.getStatus();
+
                 emailService.sendEmail(
                         savedRequest.getUser().getEmail(),
                         "Procurement Request Rejected",
-                        "Your procurement request has been rejected by the Admin.\n\n"
-                                + "Request ID: " + savedRequest.getRequestId()
+                        message
                 );
             }
 
