@@ -31,10 +31,10 @@ public class SecurityConfig {
                                 "/users/login"
                         ).permitAll()
 
-                        .requestMatchers(
-                                "/requests/*/manager-approve",
-                                "/requests/*/manager-reject"
-                        ).hasAuthority("ROLE_MANAGER")
+                      .requestMatchers(
+        "/requests/*/manager-approve",
+        "/requests/*/manager-reject"
+).hasAuthority("ROLE_MANAGER")
 
                         .requestMatchers(
                                 "/requests/*/approve",
