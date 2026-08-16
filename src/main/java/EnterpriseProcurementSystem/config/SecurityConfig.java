@@ -31,15 +31,17 @@ public class SecurityConfig {
                                 "/users/login"
                         ).permitAll()
 
-                      .requestMatchers(
-        "/requests/*/manager-approve",
-        "/requests/*/manager-reject"
-).hasAuthority("ROLE_MANAGER")
+                        .requestMatchers(
+                                "/requests/download"
+                        ).hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
-                                "/requests/*/approve",
-                                "/requests/*/reject"
-                        ).hasAuthority("ROLE_ADMIN")
+                                "/requests/my/download"
+                        ).authenticated()
+
+                        .requestMatchers(
+                                "/requests/*/status"
+                        ).authenticated()
 
                         .anyRequest().authenticated()
                 )

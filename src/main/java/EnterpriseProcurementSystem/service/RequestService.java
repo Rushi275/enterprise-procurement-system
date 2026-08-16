@@ -1,11 +1,15 @@
 package EnterpriseProcurementSystem.service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import EnterpriseProcurementSystem.dto.RequestStatusResponse;
 import EnterpriseProcurementSystem.entity.Admin;
 import EnterpriseProcurementSystem.entity.Department;
 import EnterpriseProcurementSystem.entity.Product;
@@ -131,12 +135,43 @@ public class RequestService {
         return requestRepository.findByStatus(RequestStatus.PENDING);
     }
 
-    public Request managerApproveRequest(Long id) {
+    public RequestStatusResponse updateRequestStatus(Long id, String status) {
 
         Request request = requestRepository.findById(id).orElse(null);
 
-        if (request != null &&
-                request.getStatus() == RequestStatus.PENDING) {
+        if (request == null) {
+            return null;
+        }
+
+        RequestStatus newStatus;
+
+        try {
+            newStatus = RequestStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isManager =
+                authentication.getAuthorities()
+                        .stream()
+                        .anyMatch(authority ->
+                                authority.getAuthority().equals("ROLE_MANAGER"));
+
+        boolean isAdmin =
+                authentication.getAuthorities()
+                        .stream()
+                        .anyMatch(authority ->
+                                authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (request.getStatus() == RequestStatus.PENDING &&
+                newStatus == RequestStatus.MANAGER_APPROVED) {
+
+            if (!isManager) {
+                return null;
+            }
 
             request.setStatus(RequestStatus.MANAGER_APPROVED);
             request.setUpdatedDate(LocalDateTime.now());
@@ -168,18 +203,15 @@ public class RequestService {
                 );
             }
 
-            return savedRequest;
+            return createStatusResponse(savedRequest);
         }
 
-        return null;
-    }
+        if (request.getStatus() == RequestStatus.PENDING &&
+                newStatus == RequestStatus.MANAGER_REJECTED) {
 
-    public Request managerRejectRequest(Long id) {
-
-        Request request = requestRepository.findById(id).orElse(null);
-
-        if (request != null &&
-                request.getStatus() == RequestStatus.PENDING) {
+            if (!isManager) {
+                return null;
+            }
 
             request.setStatus(RequestStatus.MANAGER_REJECTED);
             request.setUpdatedDate(LocalDateTime.now());
@@ -206,18 +238,15 @@ public class RequestService {
                 );
             }
 
-            return savedRequest;
+            return createStatusResponse(savedRequest);
         }
 
-        return null;
-    }
+        if (request.getStatus() == RequestStatus.MANAGER_APPROVED &&
+                newStatus == RequestStatus.APPROVED) {
 
-    public Request approveRequest(Long id) {
-
-        Request request = requestRepository.findById(id).orElse(null);
-
-        if (request != null &&
-                request.getStatus() == RequestStatus.MANAGER_APPROVED) {
+            if (!isAdmin) {
+                return null;
+            }
 
             request.setStatus(RequestStatus.APPROVED);
             request.setUpdatedDate(LocalDateTime.now());
@@ -261,6 +290,10 @@ public class RequestService {
                             + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
                             + "Total Price: " + savedRequest.getTotalPrice() + "\n"
                             + "Status: " + savedRequest.getStatus() + "\n\n"
+                            + "Payment Details:\n"
+                            + "Bank Account Number: 123456789012\n"
+                            + "IFSC Code: DEMO0001234\n"
+                            + "Account Name: Enterprise Procurement System\n\n"
                             + "Please process this procurement order.";
 
                     emailService.sendEmail(
@@ -271,18 +304,15 @@ public class RequestService {
                 }
             }
 
-            return savedRequest;
+            return createStatusResponse(savedRequest);
         }
 
-        return null;
-    }
+        if (request.getStatus() == RequestStatus.MANAGER_APPROVED &&
+                newStatus == RequestStatus.REJECTED) {
 
-    public Request rejectRequest(Long id) {
-
-        Request request = requestRepository.findById(id).orElse(null);
-
-        if (request != null &&
-                request.getStatus() == RequestStatus.MANAGER_APPROVED) {
+            if (!isAdmin) {
+                return null;
+            }
 
             request.setStatus(RequestStatus.REJECTED);
             request.setUpdatedDate(LocalDateTime.now());
@@ -309,10 +339,65 @@ public class RequestService {
                 );
             }
 
-            return savedRequest;
+            return createStatusResponse(savedRequest);
         }
 
         return null;
+    }
+
+    private RequestStatusResponse createStatusResponse(Request request) {
+
+        return new RequestStatusResponse(
+                request.getProduct().getProductId(),
+                request.getRequestId(),
+                request.getStatus().name()
+        );
+    }
+
+    public byte[] downloadMyRequestsCsv(Long userId) {
+
+        List<Request> requests =
+                requestRepository.findByUserUserId(userId);
+
+        StringBuilder csv = new StringBuilder();
+
+        csv.append("Request ID,Product,Quantity,Department,Total Price,Status,Created Date\n");
+
+        for (Request request : requests) {
+
+            csv.append(request.getRequestId()).append(",")
+                    .append(request.getProduct().getName()).append(",")
+                    .append(request.getNumberOfQuantities()).append(",")
+                    .append(request.getDepartment().getDepartmentName()).append(",")
+                    .append(request.getTotalPrice()).append(",")
+                    .append(request.getStatus()).append(",")
+                    .append(request.getCreatedDate()).append("\n");
+        }
+
+        return csv.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    public byte[] downloadAllRequestsCsv() {
+
+        List<Request> requests = requestRepository.findAll();
+
+        StringBuilder csv = new StringBuilder();
+
+        csv.append("Request ID,Employee,Product,Quantity,Department,Total Price,Status,Created Date\n");
+
+        for (Request request : requests) {
+
+            csv.append(request.getRequestId()).append(",")
+                    .append(request.getUser().getName()).append(",")
+                    .append(request.getProduct().getName()).append(",")
+                    .append(request.getNumberOfQuantities()).append(",")
+                    .append(request.getDepartment().getDepartmentName()).append(",")
+                    .append(request.getTotalPrice()).append(",")
+                    .append(request.getStatus()).append(",")
+                    .append(request.getCreatedDate()).append("\n");
+        }
+
+        return csv.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     public void deleteRequest(Long id) {
