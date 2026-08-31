@@ -24,12 +24,12 @@ public class AdminController {
     @PostMapping("/login")
     public String login(@RequestBody Admin admin) {
 
-        String token = adminService.login(admin.getUsername(), admin.getPassword());
+       String token = adminService.login(admin.getEmail(), admin.getPassword());
 
         if (token != null) {
             return token;
         }
 
-        return "Invalid Username or Password";
+        return "Invalid Email or Password";
     }
 }

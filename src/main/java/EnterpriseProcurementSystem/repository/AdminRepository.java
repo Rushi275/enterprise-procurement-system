@@ -8,5 +8,5 @@ import EnterpriseProcurementSystem.entity.Admin;
 @Repository
 public interface AdminRepository extends JpaRepository<Admin, Long> {
 
-    Admin findByUsername(String username);
+    Admin findByEmail(String email);
 }

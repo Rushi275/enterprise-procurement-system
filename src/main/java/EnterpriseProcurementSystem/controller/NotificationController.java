@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import EnterpriseProcurementSystem.entity.Admin;
 import EnterpriseProcurementSystem.entity.Notification;
 import EnterpriseProcurementSystem.entity.User;
+import EnterpriseProcurementSystem.repository.AdminRepository;
 import EnterpriseProcurementSystem.repository.UserRepository;
 import EnterpriseProcurementSystem.service.NotificationService;
 
@@ -23,6 +25,9 @@ public class NotificationController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AdminRepository adminRepository;
 
     @GetMapping("/user/{userId}")
     public List<Notification> getUserNotifications(@PathVariable Long userId) {
@@ -46,6 +51,31 @@ public class NotificationController {
         }
 
         return notificationService.getUnreadNotifications(user);
+    }
+
+    @GetMapping("/admin/{adminId}")
+    public List<Notification> getAdminNotifications(@PathVariable Long adminId) {
+
+        Admin admin = adminRepository.findById(adminId).orElse(null);
+
+        if (admin == null) {
+            return List.of();
+        }
+
+        return notificationService.getAdminNotifications(admin);
+    }
+
+    @GetMapping("/admin/{adminId}/unread")
+    public List<Notification> getUnreadAdminNotifications(
+            @PathVariable Long adminId) {
+
+        Admin admin = adminRepository.findById(adminId).orElse(null);
+
+        if (admin == null) {
+            return List.of();
+        }
+
+        return notificationService.getUnreadAdminNotifications(admin);
     }
 
     @PutMapping("/{id}/read")

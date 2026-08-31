@@ -31,6 +31,10 @@ public class Notification {
     private User user;
 
     @ManyToOne
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
+
+    @ManyToOne
     @JoinColumn(name = "request_id")
     private Request request;
 
@@ -80,6 +84,14 @@ public class Notification {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Admin admin) {
+        this.admin = admin;
     }
 
     public Request getRequest() {

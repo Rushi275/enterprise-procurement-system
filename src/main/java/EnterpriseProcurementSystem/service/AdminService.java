@@ -21,18 +21,16 @@ public class AdminService {
     private PasswordEncoder passwordEncoder;
 
     public Admin register(Admin admin) {
-
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
-
         return adminRepository.save(admin);
     }
 
-    public String login(String username, String password) {
+    public String login(String email, String password) {
 
-        Admin admin = adminRepository.findByUsername(username);
+        Admin admin = adminRepository.findByEmail(email);
 
         if (admin != null && passwordEncoder.matches(password, admin.getPassword())) {
-            return jwtUtil.generateToken(username, "ADMIN");
+            return jwtUtil.generateToken(email, "ADMIN");
         }
 
         return null;

@@ -166,45 +166,53 @@ public class RequestService {
                         .anyMatch(authority ->
                                 authority.getAuthority().equals("ROLE_ADMIN"));
 
-        if (request.getStatus() == RequestStatus.PENDING &&
-                newStatus == RequestStatus.MANAGER_APPROVED) {
+       if (request.getStatus() == RequestStatus.PENDING &&
+        newStatus == RequestStatus.MANAGER_APPROVED) {
 
-            if (!isManager) {
-                return null;
-            }
+    if (!isManager) {
+        return null;
+    }
 
-            request.setStatus(RequestStatus.MANAGER_APPROVED);
-            request.setUpdatedDate(LocalDateTime.now());
+    request.setStatus(RequestStatus.MANAGER_APPROVED);
+    request.setUpdatedDate(LocalDateTime.now());
 
-            Request savedRequest = requestRepository.save(request);
+    Request savedRequest = requestRepository.save(request);
 
-            List<Admin> admins = adminRepository.findAll();
+    List<Admin> admins = adminRepository.findAll();
 
-            if (!admins.isEmpty()) {
+    if (!admins.isEmpty()) {
 
-                Admin admin = admins.get(0);
+        Admin admin = admins.get(0);
 
-                String message =
-                        "Manager has approved a procurement request.\n\n"
-                        + "Request Details:\n"
-                        + "Request ID: " + savedRequest.getRequestId() + "\n"
-                        + "Employee: " + savedRequest.getUser().getName() + "\n"
-                        + "Product: " + savedRequest.getProduct().getName() + "\n"
-                        + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
-                        + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
-                        + "Total Price: " + savedRequest.getTotalPrice() + "\n"
-                        + "Status: " + savedRequest.getStatus() + "\n\n"
-                        + "Please review and approve or reject the request.";
+        String message =
+                "Manager has approved a procurement request.\n\n"
+                + "Request Details:\n"
+                + "Request ID: " + savedRequest.getRequestId() + "\n"
+                + "Employee: " + savedRequest.getUser().getName() + "\n"
+                + "Product: " + savedRequest.getProduct().getName() + "\n"
+                + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
+                + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                + "Status: " + savedRequest.getStatus() + "\n\n"
+                + "Please review and approve or reject the request.";
 
-                emailService.sendEmail(
-                        admin.getEmail(),
-                        "Procurement Request Approved by Manager",
-                        message
-                );
-            }
+        notificationService.createAdminNotification(
+                "Manager has approved a procurement request. Request ID: "
+                        + savedRequest.getRequestId(),
+                admin,
+                savedRequest,
+                NotificationType.MANAGER_APPROVED
+        );
 
-            return createStatusResponse(savedRequest);
-        }
+        emailService.sendEmail(
+                admin.getEmail(),
+                "Procurement Request Approved by Manager",
+                message
+        );
+    }
+
+    return createStatusResponse(savedRequest);
+}
 
         if (request.getStatus() == RequestStatus.PENDING &&
                 newStatus == RequestStatus.MANAGER_REJECTED) {
