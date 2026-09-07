@@ -3,6 +3,10 @@ package EnterpriseProcurementSystem.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +33,26 @@ public class SupplierOrderController {
         String email = authentication.getName();
 
         return supplierOrderService.getSupplierOrders(email);
+    }
+
+    @GetMapping("/download")
+    public ResponseEntity<ByteArrayResource> downloadSupplierOrders(
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        byte[] csv = supplierOrderService.downloadSupplierOrdersCsv(email);
+
+        ByteArrayResource resource = new ByteArrayResource(csv);
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=supplier-orders.csv"
+                )
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .contentLength(csv.length)
+                .body(resource);
     }
 
     @PutMapping("/{orderId}/status")

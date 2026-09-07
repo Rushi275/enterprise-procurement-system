@@ -14,7 +14,6 @@ import EnterpriseProcurementSystem.entity.Admin;
 import EnterpriseProcurementSystem.entity.Department;
 import EnterpriseProcurementSystem.entity.Product;
 import EnterpriseProcurementSystem.entity.Request;
-import EnterpriseProcurementSystem.entity.Supplier;
 import EnterpriseProcurementSystem.entity.User;
 import EnterpriseProcurementSystem.enums.NotificationType;
 import EnterpriseProcurementSystem.enums.RequestStatus;
@@ -22,7 +21,6 @@ import EnterpriseProcurementSystem.repository.AdminRepository;
 import EnterpriseProcurementSystem.repository.DepartmentRepository;
 import EnterpriseProcurementSystem.repository.ProductRepository;
 import EnterpriseProcurementSystem.repository.RequestRepository;
-import EnterpriseProcurementSystem.repository.SupplierRepository;
 import EnterpriseProcurementSystem.repository.UserRepository;
 
 @Service
@@ -45,9 +43,6 @@ public class RequestService {
 
     @Autowired
     private AdminRepository adminRepository;
-
-    @Autowired
-    private SupplierRepository supplierRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -166,53 +161,53 @@ public class RequestService {
                         .anyMatch(authority ->
                                 authority.getAuthority().equals("ROLE_ADMIN"));
 
-       if (request.getStatus() == RequestStatus.PENDING &&
-        newStatus == RequestStatus.MANAGER_APPROVED) {
+        if (request.getStatus() == RequestStatus.PENDING &&
+                newStatus == RequestStatus.MANAGER_APPROVED) {
 
-    if (!isManager) {
-        return null;
-    }
+            if (!isManager) {
+                return null;
+            }
 
-    request.setStatus(RequestStatus.MANAGER_APPROVED);
-    request.setUpdatedDate(LocalDateTime.now());
+            request.setStatus(RequestStatus.MANAGER_APPROVED);
+            request.setUpdatedDate(LocalDateTime.now());
 
-    Request savedRequest = requestRepository.save(request);
+            Request savedRequest = requestRepository.save(request);
 
-    List<Admin> admins = adminRepository.findAll();
+            List<Admin> admins = adminRepository.findAll();
 
-    if (!admins.isEmpty()) {
+            if (!admins.isEmpty()) {
 
-        Admin admin = admins.get(0);
+                Admin admin = admins.get(0);
 
-        String message =
-                "Manager has approved a procurement request.\n\n"
-                + "Request Details:\n"
-                + "Request ID: " + savedRequest.getRequestId() + "\n"
-                + "Employee: " + savedRequest.getUser().getName() + "\n"
-                + "Product: " + savedRequest.getProduct().getName() + "\n"
-                + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
-                + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
-                + "Total Price: " + savedRequest.getTotalPrice() + "\n"
-                + "Status: " + savedRequest.getStatus() + "\n\n"
-                + "Please review and approve or reject the request.";
+                String message =
+                        "Manager has approved a procurement request.\n\n"
+                        + "Request Details:\n"
+                        + "Request ID: " + savedRequest.getRequestId() + "\n"
+                        + "Employee: " + savedRequest.getUser().getName() + "\n"
+                        + "Product: " + savedRequest.getProduct().getName() + "\n"
+                        + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
+                        + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
+                        + "Total Price: " + savedRequest.getTotalPrice() + "\n"
+                        + "Status: " + savedRequest.getStatus() + "\n\n"
+                        + "Please review and approve or reject the request.";
 
-        notificationService.createAdminNotification(
-                "Manager has approved a procurement request. Request ID: "
-                        + savedRequest.getRequestId(),
-                admin,
-                savedRequest,
-                NotificationType.MANAGER_APPROVED
-        );
+                notificationService.createAdminNotification(
+                        "Manager has approved a procurement request. Request ID: "
+                                + savedRequest.getRequestId(),
+                        admin,
+                        savedRequest,
+                        NotificationType.MANAGER_APPROVED
+                );
 
-        emailService.sendEmail(
-                admin.getEmail(),
-                "Procurement Request Approved by Manager",
-                message
-        );
-    }
+                emailService.sendEmail(
+                        admin.getEmail(),
+                        "Procurement Request Approved by Manager",
+                        message
+                );
+            }
 
-    return createStatusResponse(savedRequest);
-}
+            return createStatusResponse(savedRequest);
+        }
 
         if (request.getStatus() == RequestStatus.PENDING &&
                 newStatus == RequestStatus.MANAGER_REJECTED) {
@@ -280,36 +275,6 @@ public class RequestService {
                         "Procurement Request Approved",
                         message
                 );
-            }
-
-            List<Supplier> suppliers =
-                    supplierRepository.findByProduct(savedRequest.getProduct());
-
-            for (Supplier supplier : suppliers) {
-
-                if (supplier.getEmail() != null) {
-
-                    String message =
-                            "A new procurement order has been approved.\n\n"
-                            + "Order Details:\n"
-                            + "Request ID: " + savedRequest.getRequestId() + "\n"
-                            + "Product: " + savedRequest.getProduct().getName() + "\n"
-                            + "Quantity: " + savedRequest.getNumberOfQuantities() + "\n"
-                            + "Department: " + savedRequest.getDepartment().getDepartmentName() + "\n"
-                            + "Total Price: " + savedRequest.getTotalPrice() + "\n"
-                            + "Status: " + savedRequest.getStatus() + "\n\n"
-                            + "Payment Details:\n"
-                            + "Bank Account Number: 123456789012\n"
-                            + "IFSC Code: DEMO0001234\n"
-                            + "Account Name: Enterprise Procurement System\n\n"
-                            + "Please process this procurement order.";
-
-                    emailService.sendEmail(
-                            supplier.getEmail(),
-                            "New Procurement Order",
-                            message
-                    );
-                }
             }
 
             return createStatusResponse(savedRequest);

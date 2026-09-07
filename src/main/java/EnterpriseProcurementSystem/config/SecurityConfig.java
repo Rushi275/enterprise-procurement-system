@@ -31,34 +31,58 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                        .permitAll()
+
                         .requestMatchers(
                                 "/admin/register",
                                 "/admin/login",
                                 "/users/login"
-                        ).permitAll()
+                        )
+                        .permitAll()
+
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/suppliers/*/account"
-                        ).hasAuthority("ROLE_ADMIN")
+                        )
+                        .hasAuthority("ROLE_ADMIN")
+
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/suppliers/*/mpin"
-                        ).hasAuthority("ROLE_ADMIN")
+                        )
+                        .hasAuthority("ROLE_ADMIN")
+
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/payments"
-                        ).hasAuthority("ROLE_ADMIN")
+                        )
+                        .hasAuthority("ROLE_ADMIN")
+
                         .requestMatchers(
                                 "/requests/download"
-                        ).hasAuthority("ROLE_ADMIN")
+                        )
+                        .hasAuthority("ROLE_ADMIN")
+
                         .requestMatchers(
                                 "/requests/my/download"
-                        ).authenticated()
+                        )
+                        .authenticated()
+
                         .requestMatchers(
                                 "/requests/*/status"
-                        ).authenticated()
-                        .anyRequest().authenticated()
+                        )
+                        .authenticated()
+
+                        .requestMatchers(
+                                "/supplier/orders/**",
+                                "/supplier/payments/**"
+                        )
+                        .hasAuthority("ROLE_SUPPLIER")
+
+                        .anyRequest()
+                        .authenticated()
                 )
                 .addFilterBefore(
                         jwtFilter,
@@ -78,7 +102,14 @@ public class SecurityConfig {
         );
 
         configuration.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH",
+                        "OPTIONS"
+                )
         );
 
         configuration.setAllowedHeaders(

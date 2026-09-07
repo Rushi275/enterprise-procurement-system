@@ -1,5 +1,6 @@
 package EnterpriseProcurementSystem.service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,17 +31,7 @@ public class SupplierOrderService {
 
     public List<SupplierOrderResponse> getSupplierOrders(String email) {
 
-        User user = userRepository.findByEmail(email);
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        Supplier supplier = supplierRepository.findByUser(user);
-
-        if (supplier == null) {
-            throw new RuntimeException("Supplier not found");
-        }
+        Supplier supplier = getSupplierByEmail(email);
 
         return orderRepository.findBySupplier(supplier)
                 .stream()
@@ -48,22 +39,37 @@ public class SupplierOrderService {
                 .collect(Collectors.toList());
     }
 
+    public byte[] downloadSupplierOrdersCsv(String email) {
+
+        Supplier supplier = getSupplierByEmail(email);
+
+        List<Order> orders = orderRepository.findBySupplier(supplier);
+
+        StringBuilder csv = new StringBuilder();
+
+        csv.append("Order ID,Request ID,Product,Quantity,Amount,Status,Created Date,Updated Date\n");
+
+        for (Order order : orders) {
+
+            csv.append(order.getOrderId()).append(",")
+                    .append(order.getRequest().getRequestId()).append(",")
+                    .append(order.getRequest().getProduct().getName()).append(",")
+                    .append(order.getRequest().getNumberOfQuantities()).append(",")
+                    .append(order.getRequest().getTotalPrice()).append(",")
+                    .append(order.getStatus()).append(",")
+                    .append(order.getCreatedDate()).append(",")
+                    .append(order.getUpdatedDate()).append("\n");
+        }
+
+        return csv.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
     public SupplierOrderResponse updateOrderStatus(
             Long orderId,
             String email,
             SupplierOrderStatus newStatus) {
 
-        User user = userRepository.findByEmail(email);
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        Supplier supplier = supplierRepository.findByUser(user);
-
-        if (supplier == null) {
-            throw new RuntimeException("Supplier not found");
-        }
+        Supplier supplier = getSupplierByEmail(email);
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -91,6 +97,23 @@ public class SupplierOrderService {
         Order savedOrder = orderRepository.save(order);
 
         return convertToResponse(savedOrder);
+    }
+
+    private Supplier getSupplierByEmail(String email) {
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        Supplier supplier = supplierRepository.findByUser(user);
+
+        if (supplier == null) {
+            throw new RuntimeException("Supplier not found");
+        }
+
+        return supplier;
     }
 
     private boolean isValidNextStatus(

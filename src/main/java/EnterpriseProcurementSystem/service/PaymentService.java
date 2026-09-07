@@ -40,6 +40,9 @@ public class PaymentService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+
     public Payment processPayment(PaymentRequest paymentRequest) {
 
         Request request = requestRepository.findById(paymentRequest.getRequestId())
@@ -113,10 +116,26 @@ public class PaymentService {
 
         orderRepository.save(order);
 
+        emailService.sendEmail(
+                supplier.getEmail(),
+                "Procurement Order Received - Request #" + request.getRequestId(),
+                "Hello " + supplier.getName() + ",\n\n"
+                        + "A procurement order has been successfully processed.\n\n"
+                        + "Request ID: " + request.getRequestId() + "\n"
+                        + "Product: " + product.getName() + "\n"
+                        + "Quantity: " + request.getNumberOfQuantities() + "\n"
+                        + "Amount: ₹" + request.getTotalPrice() + "\n"
+                        + "Transaction ID: " + savedPayment.getTransactionId() + "\n"
+                        + "Order Status: " + order.getStatus() + "\n\n"
+                        + "Please process the order accordingly.\n\n"
+                        + "Enterprise Procurement System"
+        );
+
         return savedPayment;
     }
 
     private String generateTransactionId() {
+
         return "TXN-" + UUID.randomUUID()
                 .toString()
                 .replace("-", "")
