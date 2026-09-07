@@ -1,7 +1,6 @@
 package EnterpriseProcurementSystem.entity;
 
 import EnterpriseProcurementSystem.enums.SupplierStatus;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -10,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -18,37 +18,34 @@ public class Supplier {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "supplier_id")
     private Long supplierId;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "name")
     private String name;
 
-    @Column(name = "phone")
     private String phone;
 
-    @Column(name = "address")
     private String address;
 
-    @Column(name = "email")
     private String email;
 
-    @Column(name = "gst_number")
     private String gstNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
     private SupplierStatus status;
 
-    @Column(name = "rating")
     private Double rating;
 
-    @Column(name = "feedback")
     private String feedback;
+
+    private String mpinHash;
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     public Supplier() {
     }
@@ -131,5 +128,21 @@ public class Supplier {
 
     public void setFeedback(String feedback) {
         this.feedback = feedback;
+    }
+
+    public String getMpinHash() {
+        return mpinHash;
+    }
+
+    public void setMpinHash(String mpinHash) {
+        this.mpinHash = mpinHash;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

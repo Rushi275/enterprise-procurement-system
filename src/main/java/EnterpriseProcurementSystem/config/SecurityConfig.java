@@ -31,27 +31,33 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
                         .requestMatchers(
                                 "/admin/register",
                                 "/admin/login",
                                 "/users/login"
                         ).permitAll()
-
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/suppliers/*/account"
+                        ).hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/suppliers/*/mpin"
+                        ).hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/payments"
+                        ).hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
                                 "/requests/download"
                         ).hasAuthority("ROLE_ADMIN")
-
                         .requestMatchers(
                                 "/requests/my/download"
                         ).authenticated()
-
                         .requestMatchers(
                                 "/requests/*/status"
                         ).authenticated()
-
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
