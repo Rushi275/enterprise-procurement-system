@@ -1,6 +1,7 @@
 package EnterpriseProcurementSystem.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,11 +9,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import EnterpriseProcurementSystem.dto.PaymentRequest;
+import EnterpriseProcurementSystem.entity.Order;
 import EnterpriseProcurementSystem.entity.Payment;
+import EnterpriseProcurementSystem.entity.Product;
 import EnterpriseProcurementSystem.entity.Request;
 import EnterpriseProcurementSystem.entity.Supplier;
 import EnterpriseProcurementSystem.enums.PaymentStatus;
 import EnterpriseProcurementSystem.enums.RequestStatus;
+import EnterpriseProcurementSystem.enums.SupplierOrderStatus;
+import EnterpriseProcurementSystem.repository.OrderRepository;
 import EnterpriseProcurementSystem.repository.PaymentRepository;
 import EnterpriseProcurementSystem.repository.RequestRepository;
 import EnterpriseProcurementSystem.repository.SupplierRepository;
@@ -28,6 +33,9 @@ public class PaymentService {
 
     @Autowired
     private SupplierRepository supplierRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -68,6 +76,21 @@ public class PaymentService {
             throw new RuntimeException("Invalid request amount");
         }
 
+        Product product = request.getProduct();
+
+        if (product == null) {
+            throw new RuntimeException("Request product not found");
+        }
+
+        List<Supplier> suppliers = supplierRepository.findByProduct(product);
+
+        boolean supplierMatches = suppliers.stream()
+                .anyMatch(item -> item.getSupplierId().equals(supplier.getSupplierId()));
+
+        if (!supplierMatches) {
+            throw new RuntimeException("Supplier does not supply this product");
+        }
+
         Payment payment = new Payment();
 
         payment.setRequest(request);
@@ -78,7 +101,19 @@ public class PaymentService {
         payment.setTransactionId(generateTransactionId());
         payment.setPaymentDate(LocalDateTime.now());
 
-        return paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+
+        Order order = new Order();
+
+        order.setRequest(request);
+        order.setSupplier(supplier);
+        order.setStatus(SupplierOrderStatus.RECEIVED);
+        order.setCreatedDate(LocalDateTime.now());
+        order.setUpdatedDate(LocalDateTime.now());
+
+        orderRepository.save(order);
+
+        return savedPayment;
     }
 
     private String generateTransactionId() {
