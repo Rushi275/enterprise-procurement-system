@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import EnterpriseProcurementSystem.dto.PaymentRequest;
+import EnterpriseProcurementSystem.dto.PaymentResponse;
 import EnterpriseProcurementSystem.entity.Order;
 import EnterpriseProcurementSystem.entity.Payment;
 import EnterpriseProcurementSystem.entity.Product;
@@ -132,6 +133,28 @@ public class PaymentService {
         );
 
         return savedPayment;
+    }
+
+    public List<PaymentResponse> getPayments() {
+
+        List<Payment> payments = paymentRepository.findAll();
+
+        return payments.stream().map(payment -> {
+
+            PaymentResponse response = new PaymentResponse();
+
+            response.setPaymentId(payment.getPaymentId());
+            response.setRequestId(payment.getRequest().getRequestId());
+            response.setSupplierId(payment.getSupplier().getSupplierId());
+            response.setAmount(payment.getAmount());
+            response.setPaymentMethod(payment.getPaymentMethod());
+            response.setTransactionId(payment.getTransactionId());
+            response.setStatus(payment.getStatus());
+            response.setPaymentDate(payment.getPaymentDate());
+
+            return response;
+
+        }).toList();
     }
 
     private String generateTransactionId() {
