@@ -17,16 +17,22 @@ public class OrderTrackingController {
     @Autowired
     private OrderTrackingService orderTrackingService;
 
-    @GetMapping("/{orderId}/tracking")
+    @GetMapping("/request/{requestId}/tracking")
     public OrderTrackingResponse getOrderTracking(
-            @PathVariable Long orderId,
+            @PathVariable Long requestId,
             Authentication authentication) {
 
         String email = authentication.getName();
 
-        return orderTrackingService.getOrderTracking(
-                orderId,
-                email
-        );
+        String role = authentication.getAuthorities()
+                .stream()
+                .findFirst()
+                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                .orElse("");
+
+        return orderTrackingService.getOrderTrackingByRequestId(
+                requestId,
+                email,
+                role);
     }
 }

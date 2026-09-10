@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import EnterpriseProcurementSystem.dto.OrderTrackingResponse;
+import EnterpriseProcurementSystem.entity.Admin;
 import EnterpriseProcurementSystem.entity.Order;
 import EnterpriseProcurementSystem.entity.User;
+import EnterpriseProcurementSystem.repository.AdminRepository;
 import EnterpriseProcurementSystem.repository.OrderRepository;
 import EnterpriseProcurementSystem.repository.UserRepository;
 
@@ -18,24 +20,40 @@ public class OrderTrackingService {
     @Autowired
     private UserRepository userRepository;
 
-    public OrderTrackingResponse getOrderTracking(
-            Long orderId,
-            String email) {
+    @Autowired
+    private AdminRepository adminRepository;
 
-        User user = userRepository.findByEmail(email);
+    public OrderTrackingResponse getOrderTrackingByRequestId(
+            Long requestId,
+            String email,
+            String role) {
 
-        if (user == null) {
-            throw new RuntimeException("User not found");
+        Order order = orderRepository.findByRequestRequestId(requestId);
+
+        if (order == null) {
+            throw new RuntimeException("Order not found for this request");
         }
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        if ("ADMIN".equals(role)) {
+            Admin admin = adminRepository.findByEmail(email);
 
-        if (!order.getRequest().getUser().getUserId()
-                .equals(user.getUserId())) {
+            if (admin == null) {
+                throw new RuntimeException("Admin not found");
+            }
+        } else {
+            User user = userRepository.findByEmail(email);
 
-            throw new RuntimeException(
-                    "You are not authorized to view this order");
+            if (user == null) {
+                throw new RuntimeException("User not found");
+            }
+
+            boolean isOwner = order.getRequest().getUser().getUserId()
+                    .equals(user.getUserId());
+
+            if (!isOwner) {
+                throw new RuntimeException(
+                        "You are not authorized to view this order");
+            }
         }
 
         OrderTrackingResponse response = new OrderTrackingResponse();
@@ -45,6 +63,7 @@ public class OrderTrackingService {
         response.setProductName(order.getRequest().getProduct().getName());
         response.setSupplierName(order.getSupplier().getName());
         response.setStatus(order.getStatus());
+        response.setRequestStatus(order.getRequest().getStatus());
         response.setUpdatedDate(order.getUpdatedDate());
 
         return response;

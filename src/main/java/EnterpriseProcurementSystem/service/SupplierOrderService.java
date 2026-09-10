@@ -10,10 +10,13 @@ import org.springframework.stereotype.Service;
 
 import EnterpriseProcurementSystem.dto.SupplierOrderResponse;
 import EnterpriseProcurementSystem.entity.Order;
+import EnterpriseProcurementSystem.entity.Request;
 import EnterpriseProcurementSystem.entity.Supplier;
 import EnterpriseProcurementSystem.entity.User;
+import EnterpriseProcurementSystem.enums.RequestStatus;
 import EnterpriseProcurementSystem.enums.SupplierOrderStatus;
 import EnterpriseProcurementSystem.repository.OrderRepository;
+import EnterpriseProcurementSystem.repository.RequestRepository;
 import EnterpriseProcurementSystem.repository.SupplierRepository;
 import EnterpriseProcurementSystem.repository.UserRepository;
 
@@ -29,8 +32,10 @@ public class SupplierOrderService {
     @Autowired
     private SupplierRepository supplierRepository;
 
-    public List<SupplierOrderResponse> getSupplierOrders(String email) {
+    @Autowired
+    private RequestRepository requestRepository;
 
+    public List<SupplierOrderResponse> getSupplierOrders(String email) {
         Supplier supplier = getSupplierByEmail(email);
 
         return orderRepository.findBySupplier(supplier)
@@ -40,7 +45,6 @@ public class SupplierOrderService {
     }
 
     public byte[] downloadSupplierOrdersCsv(String email) {
-
         Supplier supplier = getSupplierByEmail(email);
 
         List<Order> orders = orderRepository.findBySupplier(supplier);
@@ -50,7 +54,6 @@ public class SupplierOrderService {
         csv.append("Order ID,Request ID,Product,Quantity,Amount,Status,Created Date,Updated Date\n");
 
         for (Order order : orders) {
-
             csv.append(order.getOrderId()).append(",")
                     .append(order.getRequest().getRequestId()).append(",")
                     .append(order.getRequest().getProduct().getName()).append(",")
@@ -96,11 +99,19 @@ public class SupplierOrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        if (newStatus == SupplierOrderStatus.DELIVERED) {
+            Request request = order.getRequest();
+
+            request.setStatus(RequestStatus.DELIVERED);
+            request.setUpdatedDate(LocalDateTime.now());
+
+            requestRepository.save(request);
+        }
+
         return convertToResponse(savedOrder);
     }
 
     private Supplier getSupplierByEmail(String email) {
-
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
@@ -144,7 +155,6 @@ public class SupplierOrderService {
     }
 
     private SupplierOrderResponse convertToResponse(Order order) {
-
         SupplierOrderResponse response = new SupplierOrderResponse();
 
         response.setOrderId(order.getOrderId());
