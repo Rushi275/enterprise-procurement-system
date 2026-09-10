@@ -2,10 +2,12 @@ package EnterpriseProcurementSystem.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import EnterpriseProcurementSystem.dto.PaymentResponse;
 import EnterpriseProcurementSystem.entity.Payment;
 import EnterpriseProcurementSystem.entity.Supplier;
 import EnterpriseProcurementSystem.entity.User;
@@ -25,6 +27,26 @@ public class SupplierPaymentService {
     @Autowired
     private SupplierRepository supplierRepository;
 
+    public List<PaymentResponse> getSupplierPayments(String email) {
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        Supplier supplier = supplierRepository.findByUser(user);
+
+        if (supplier == null) {
+            throw new RuntimeException("Supplier not found");
+        }
+
+        return paymentRepository.findBySupplier(supplier)
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
     public byte[] downloadSupplierPaymentsCsv(String email) {
 
         User user = userRepository.findByEmail(email);
@@ -39,8 +61,7 @@ public class SupplierPaymentService {
             throw new RuntimeException("Supplier not found");
         }
 
-        List<Payment> payments =
-                paymentRepository.findBySupplier(supplier);
+        List<Payment> payments = paymentRepository.findBySupplier(supplier);
 
         StringBuilder csv = new StringBuilder();
 
@@ -49,7 +70,6 @@ public class SupplierPaymentService {
         );
 
         for (Payment payment : payments) {
-
             csv.append(payment.getPaymentId()).append(",")
                     .append(payment.getRequest().getRequestId()).append(",")
                     .append(payment.getAmount()).append(",")
@@ -60,5 +80,21 @@ public class SupplierPaymentService {
         }
 
         return csv.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private PaymentResponse convertToResponse(Payment payment) {
+
+        PaymentResponse response = new PaymentResponse();
+
+        response.setPaymentId(payment.getPaymentId());
+        response.setRequestId(payment.getRequest().getRequestId());
+        response.setSupplierId(payment.getSupplier().getSupplierId());
+        response.setAmount(payment.getAmount());
+        response.setPaymentMethod(payment.getPaymentMethod());
+        response.setTransactionId(payment.getTransactionId());
+        response.setStatus(payment.getStatus());
+        response.setPaymentDate(payment.getPaymentDate());
+
+        return response;
     }
 }

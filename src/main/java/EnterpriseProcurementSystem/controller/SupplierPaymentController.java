@@ -1,5 +1,7 @@
 package EnterpriseProcurementSystem.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import EnterpriseProcurementSystem.dto.PaymentResponse;
 import EnterpriseProcurementSystem.service.SupplierPaymentService;
 
 @RestController
@@ -18,6 +21,15 @@ public class SupplierPaymentController {
 
     @Autowired
     private SupplierPaymentService supplierPaymentService;
+
+    @GetMapping
+    public List<PaymentResponse> getSupplierPayments(
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        return supplierPaymentService.getSupplierPayments(email);
+    }
 
     @GetMapping("/download")
     public ResponseEntity<ByteArrayResource> downloadSupplierPayments(
